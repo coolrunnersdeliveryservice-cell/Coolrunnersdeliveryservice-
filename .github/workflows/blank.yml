@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoolRunners | Delivery App</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="CoolRunners">
+    <meta name="theme-color" content="#dc2626">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans pb-20">
+
+    <div id="success-modal" class="fixed inset-0 bg-gray-900/90 z-[200] hidden flex items-center justify-center p-6 text-center">
+        <div class="bg-white rounded-3xl p-10 max-w-sm w-full shadow-2xl animate-bounce-short">
+            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-check text-4xl"></i>
+            </div>
+            <h2 class="text-2xl font-black text-gray-900 mb-2 uppercase">Done!</h2>
+            <p id="success-text" class="text-gray-500 mb-6">Communicating with base...</p>
+        </div>
+    </div>
+
+    <nav class="p-6 bg-white shadow-sm flex justify-between items-center sticky top-0 z-50">
+        <h1 class="text-2xl font-bold text-red-600 italic tracking-tighter cursor-pointer" onclick="location.reload()">CoolRunners</h1>
+        <button id="driver-login-btn" onclick="toggleDriverLogin()" class="text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-red-600 transition">
+            <i class="fas fa-user-shield"></i> Driver Login
+        </button>
+        <button id="driver-logout-btn" onclick="logoutDriver()" class="hidden bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-xs uppercase">Logout</button>
+    </nav>
+
+    <section id="driver-auth" class="hidden py-8 px-6">
+        <div class="max-w-md mx-auto bg-white rounded-3xl p-8 shadow-xl text-center">
+            <h3 class="text-xl font-black mb-4 uppercase">Driver Verification</h3>
+            <input type="password" id="driver-pin" placeholder="PIN" class="w-full p-4 rounded-xl bg-gray-100 border-2 border-transparent focus:border-red-600 outline-none text-center text-2xl tracking-[0.5em] mb-4">
+            <button onclick="verifyDriver()" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl">Unlock Dispatch</button>
+        </div>
+    </section>
+
+    <section id="driver-dashboard" class="hidden py-8 px-6">
+        <div class="max-w-2xl mx-auto bg-blue-900 rounded-3xl p-8 text-white shadow-2xl border-t-8 border-blue-400">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-xl font-bold uppercase tracking-tighter">Runner Dispatch</h3>
+                <span class="bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded-full animate-pulse">ON SHIFT</span>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="driver-name" placeholder="Runner Name" class="w-full p-4 rounded-xl bg-blue-800 border border-blue-700 text-white outline-none">
+                    <input type="text" id="order-name" placeholder="Client Name" class="w-full p-4 rounded-xl bg-blue-800 border border-blue-700 text-white outline-none">
+                </div>
+
+                <div class="bg-blue-800/50 p-4 rounded-2xl border border-dashed border-blue-400/50 text-center">
+                    <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden" onchange="handlePhoto(this)">
+                    <button onclick="document.getElementById('camera-input').click()" class="flex flex-col items-center gap-2 mx-auto">
+                        <div id="photo-preview" class="w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center">
+                            <i class="fas fa-camera text-xl"></i>
+                        </div>
+                        <span id="photo-status" class="text-[10px] font-bold uppercase">Snap Proof (Optional)</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="updateStatus('PICKED UP')" class="bg-orange-500 p-6 rounded-2xl flex flex-col items-center gap-2 transition active:scale-95">
+                        <i class="fas fa-box text-2xl"></i>
+                        <span class="font-bold text-sm uppercase">Picked Up</span>
+                    </button>
+                    <button onclick="updateStatus('DELIVERED')" class="bg-green-500 p-6 rounded-2xl flex flex-col items-center gap-2 transition active:scale-95">
+                        <i class="fas fa-house-chimney-check text-2xl"></i>
+                        <span class="font-bold text-sm uppercase">Delivered</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="booking-section" class="py-8 px-6">
+        <div class="max-w-2xl mx-auto bg-gray-900 rounded-3xl p-8 text-white shadow-2xl border-t-8 border-red-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-red-500 uppercase tracking-widest">Book Your Delivery</h3>
+            <div class="space-y-6">
+                <input type="text" id="cust-name" placeholder="Your Name" class="w-full p-4 rounded-xl bg-gray-800 border border-gray-700 text-white outline-none">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="relative">
+                        <input type="text" id="pickup-location" placeholder="Pick-up Address" class="w-full p-4 pr-12 rounded-xl bg-gray-800 border border-gray-700 text-white outline-none">
+                        <button onclick="getLocation('pickup-location', 'pickup-status')" class="absolute right-3 top-3 bg-red-600 p-2 rounded-lg"><i class="fas fa-location-dot"></i></button>
+                        <p id="pickup-status" class="text-[10px] mt-1 text-gray-400"></p>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="drop-location" placeholder="Drop-off Address" class="w-full p-4 pr-12 rounded-xl bg-gray-800 border border-gray-700 text-white outline-none">
+                        <button onclick="getLocation('drop-location', 'drop-status')" class="absolute right-3 top-3 bg-gray-600 p-2 rounded-lg"><i class="fas fa-location-dot"></i></button>
+                        <p id="drop-status" class="text-[10px] mt-1 text-gray-400"></p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded-xl">
+                    <select id="package-type" onchange="calculateRate()" class="w-full bg-transparent outline-none">
+                        <option value="Small" data-price="700">Small / Document ($700)</option>
+                        <option value="Medium" data-price="1200">Medium Box ($1,200)</option>
+                        <option value="Large" data-price="2000">Large / Heavy ($2,000)</option>
+                    </select>
+                    <div class="text-red-500 font-bold mt-2" id="price-display">JMD $700</div>
+                </div>
+
+                <button onclick="sendBooking()" class="w-full bg-green-500 py-5 rounded-2xl font-black text-xl uppercase shadow-lg transition active:scale-95">Send to CoolRunners</button>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        @keyframes loading { from { width: 0%; } to { width: 100%; } }
+        .animate-bounce-short { animation: bounce 0.5s ease-in-out; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    </style>
+
+    <script>
+        const DRIVER_PIN = "1234";
+        let photoTaken = false;
+
+        function toggleDriverLogin() {
+            document.getElementById('booking-section').classList.toggle('hidden');
+            document.getElementById('driver-auth').classList.toggle('hidden');
+        }
+
+        function verifyDriver() {
+            const pinInput = document.getElementById('driver-pin').value;
+            if(pinInput === DRIVER_PIN) {
+                document.getElementById('driver-auth').classList.add('hidden');
+                document.getElementById('driver-login-btn').classList.add('hidden');
+                document.getElementById('driver-logout-btn').classList.remove('hidden');
+                document.getElementById('driver-dashboard').classList.remove('hidden');
+            } else {
+                alert("Invalid PIN.");
+            }
+        }
+
+        function logoutDriver() { location.reload(); }
+
+        function handlePhoto(input) {
+            if (input.files && input.files[0]) {
+                photoTaken = true;
+                document.getElementById('photo-preview').classList.replace('bg-blue-700', 'bg-green-500');
+                document.getElementById('photo-status').innerText = "Photo Captured!";
+            }
+        }
+
+        function updateStatus(status) {
+            const dName = document.getElementById('driver-name').value;
+            const oName = document.getElementById('order-name').value;
+            if(!dName || !oName) return alert("Fill in Runner and Client name!");
+
+            const pod = photoTaken ? "✅ Proof Captured" : "❌ No Photo";
+            const message = `*DRIVER UPDATE*%0A*Runner:* ${dName}%0A*Status:* ${status}%0A*Order:* ${oName}%0A*Proof:* ${pod}`;
+            
+            document.getElementById('success-text').innerText = "Updating Base...";
+            document.getElementById('success-modal').classList.remove('hidden');
+            
+            setTimeout(() => {
+                window.open(`https://wa.me/18763678344?text=${message}`, '_blank');
+                document.getElementById('success-modal').classList.add('hidden');
+                document.getElementById('order-name').value = ""; // Clear client for next job
+            }, 1200);
+        }
+
+        function calculateRate() {
+            const select = document.getElementById('package-type');
+            const price = select.options[select.selectedIndex].getAttribute('data-price');
+            document.getElementById('price-display').innerText = `JMD $${parseInt(price).toLocaleString()}`;
+        }
+
+        function getLocation(id, statusId) {
+            const status = document.getElementById(statusId);
+            status.textContent = "⌛ Locating...";
+            navigator.geolocation.getCurrentPosition((p) => {
+                // FIXED SYNTAX ERROR HERE (Changed { to $)
+                document.getElementById(id).value = `https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}`;
+                status.textContent = "✅ Captured!";
+            }, (err) => {
+                status.textContent = "❌ Permission Denied";
+            });
+        }
+
+        function sendBooking() {
+            const name = document.getElementById('cust-name').value;
+            const price = document.getElementById('price-display').innerText;
+            if(!name) return alert("Please enter your name!");
+
+            const msg = `*NEW BOOKING*%0A*Customer:* ${name}%0A*Est. Price:* ${price}`;
+            document.getElementById('success-text').innerText = "Sending Booking...";
+            document.getElementById('success-modal').classList.remove('hidden');
+            
+            setTimeout(() => {
+                window.open(`https://wa.me/18763678344?text=${msg}`, '_blank');
+                document.getElementById('success-modal').classList.add('hidden');
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
